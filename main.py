@@ -79,37 +79,33 @@ class Brick(pygame.sprite.Sprite):
         all_sprites.draw(win)
 
     def collide(self, ball):
-        if (ball.y + ball.radius >= self.y) and (ball.y + ball.radius < self.y + self.height) and (
-                self.x < ball.x < self.x + self.width):
+        # удар справа
+        if (ball.x + ball.radius >= self.rect.x) and (ball.x + ball.radius < self.rect.x + self.width) and (
+                self.rect.y < ball.y < self.rect.y + self.height):
+            print(" удар справа")
+            self.hit()
+            ball.set_vel(ball.x_vel * -1, ball.y_vel)
+            return True
+        if (ball.x - ball.radius <= self.rect.x + self.width) and (ball.x - ball.radius > self.rect.x) and (
+                self.rect.y < ball.y < self.rect.y + self.height):
+            print(" удар слева")
+            self.hit()
+            ball.set_vel(ball.x_vel * -1, ball.y_vel)
+            return True
+        if (ball.y + ball.radius >= self.rect.y) and (ball.y + ball.radius < self.rect.y + self.height) and (
+                self.rect.x < ball.x < self.rect.x + self.width):
             print(" удар сверху")
             self.hit()
             ball.set_vel(ball.x_vel, ball.y_vel * -1)
             return True
-
-        # Пересмотреть логику. Сделать приоритетом перед боковыми
-        # ударами, если шарик летит строго вертикально по краю кубика
-        if (ball.y - ball.radius <= self.y + self.height) and (ball.y - ball.radius > self.y) and (
-                self.x < ball.x < self.x + self.width):
+        if (ball.y - ball.radius <= self.rect.y + self.height) and (ball.y - ball.radius > self.rect.y) and (
+                self.rect.x < ball.x < self.rect.x + self.width):
             print(" удар снизу")
             self.hit()
             ball.set_vel(ball.x_vel, ball.y_vel * -1)
             return True
 
-        if (ball.x + ball.radius >= self.x) and (ball.x + ball.radius < self.x + self.width) and (
-                self.y < ball.y < self.y + self.height):
-            print(" удар справа")
-            self.hit()
-            ball.set_vel(ball.x_vel * -1, ball.y_vel)
-            return True
-        if (ball.x - ball.radius <= self.x + self.width) and (ball.x - ball.radius > self.x) and (
-                self.y < ball.y < self.y + self.height):
-            print(" удар слева")
-            self.hit()
-            ball.set_vel(ball.x_vel * -1, ball.y_vel)
-            return True
-
         return False
-
 
     def hit(self):
         self.health -= 1
