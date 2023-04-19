@@ -61,27 +61,26 @@ class Brick(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = player_img
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.x = x
+        self.y = y
 
         self.width = self.rect[2]
         self.height = self.rect[3]
         self.health = health
         self.max_health = health
-        # self.image = pygame.Surface((widht, height))
-        # self.image.fill("green")
-        self.rect.center = (x + self.width/2, y + self.height/2)
+
+        self.rect.center = (self.x + self.width//2, self.y + self.height//2)
 
     def draw(self, win):
-        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
+        # pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
 
         all_sprites.update()
         all_sprites.draw(win)
 
     def collide(self, ball):
         # удар справа
-        if (ball.x + ball.radius >= self.rect.x) and (ball.x + ball.radius < self.rect.x + self.width) and (
-                self.rect.y < ball.y < self.rect.y + self.height):
+        if (ball.x + ball.radius >= self.x) and (ball.x + ball.radius < self.x + self.width) and (
+                self.y < ball.y < self.y + self.height):
             print(" удар справа")
             self.hit()
             ball.set_vel(ball.x_vel * -1, ball.y_vel)
@@ -109,22 +108,15 @@ class Brick(pygame.sprite.Sprite):
 
     def hit(self):
         self.health -= 1
-        self.color = self.interpolate(
-            *self.colors, self.health / self.max_health)
 
-
-    @staticmethod
-    def interpolate(color_a, color_b, t):
-        # "color_a" and "color_b" are RGB tuples
-        # "t" is a value betweem 0.0 and 1.0
-        # this is a naive interpolation
-        return tuple(int(a + (b - a) * t) for a, b in zip(color_a, color_b))
 
 def draw(win, paddle, ball, bricks, lives):
     win.fill("white")
     paddle.draw(win)
     ball.draw(win)
 
+    # bricks.update()
+    bricks.draw(win)
 
     lives_text = LIVES_FONT.render(f"Lives: {lives}", 1, "black")
     win.blit(lives_text, (10, HEIGHT - lives_text.get_height() - 10))
@@ -162,31 +154,31 @@ def ball_paddle_collision(ball, paddle):
     ball.set_vel(x_vel, y_vel)
 
 
-def generate_bricks(width, height):
-    # gap = 30
-    # brick_width = WIDTH // cols - gap
-    # brick_height = 30
+def generate_bricks():
     x = 0
     y = 0
     H = 0
+    width = player_img.get_width()
+    height = player_img.get_height()
     windowSize = pygame.display.get_window_size()
     cols = windowSize[0] // width
     gap = (windowSize[0] % width) // cols
     rows = 4
-
-    bricks = []
+    if len(all_sprites) > 0:
+        for i in all_sprites:
+            all_sprites.remove(i)
     for row in range(rows):
         for col in range(cols):
+            x = col * (width + gap)
+            y = H + row * (height + gap)
             brick = Brick(x, y, 2)
             all_sprites.add(brick)
-            x = col*(brick.width + gap)
-            y = H +row * (brick.height + gap)
+
             print(x, y)
+    print(all_sprites)
 
-    brick = Brick(x, y, 2)
-    all_sprites.add(brick)
 
-    return all_sprites
+    # return all_sprites
 
 
 # настройка папки ассетов
@@ -203,7 +195,7 @@ WIDTH, HEIGHT = 800, 600
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("brick breaker")
 
-FPS = 165
+FPS = 60
 PADDLE_WIDTH = 100
 PADDLE_HEIGHT = 15
 BALL_RADIUS = 10
@@ -224,9 +216,9 @@ def main():
 
     paddle = Paddle(paddle_x, paddle_y, PADDLE_WIDTH, PADDLE_HEIGHT, "black")
     ball = Ball(WIDTH / 2, paddle_y - BALL_RADIUS, BALL_RADIUS, "black")
-    bricks = generate_bricks(91, 26)
+    generate_bricks()
 
-    lives = 3
+    lives = 1
 
     def reset():
         paddle.x = paddle_x
@@ -261,6 +253,7 @@ def main():
         ball_collision(ball)
         ball_paddle_collision(ball, paddle)
 
+
         for brick in all_sprites:
             brick.collide(ball)
 
@@ -276,18 +269,18 @@ def main():
             paddle.x = WIDTH / 2 - paddle.width / 2
 
         if lives <= 0:
-            bricks = generate_bricks(3, 3)
+            generate_bricks()
             lives = 3
             reset()
             display_text("You Lost!")
 
-        if len(bricks) == 0:
-            bricks = generate_bricks(3, 3)
+        if len(all_sprites) == 0:
+            generate_bricks()
             lives = 3
             reset()
             display_text("You Won!")
 
-        draw(win, paddle, ball, all_sprites, bricks, lives)
+        draw(win, paddle, ball, all_sprites, lives)
 
     pygame.quit()
     quit()
