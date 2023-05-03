@@ -4,7 +4,7 @@ import pygame
 
 import os
 pygame.init()
-
+print()
 all_sprites = pygame.sprite.Group()
 WIDTH, HEIGHT = 800, 600
 win = pygame.display.set_mode((WIDTH, HEIGHT))
