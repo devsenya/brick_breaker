@@ -37,16 +37,15 @@ class Paddle(pygame.sprite.Sprite):
 
 
 class Ball:
-    VEL = 6
 
     def __init__(self, x, y, radius, color):
         self.x = x
         self.y = y
         self.radius = radius
         self.color = color
-        self.x_vel = 1
+        self.x_vel = 0
+        self.VEL = 5
         self.y_vel = -self.VEL
-        # self.stop = True
 
     def move(self):
         self.x += self.x_vel
@@ -56,6 +55,10 @@ class Ball:
         self.x_vel = x_vel
         self.y_vel = y_vel
 
+    def set_positions(self, x, y):
+        self.x = x
+        self.y = y
+
     def draw(self, win):
         pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
 
@@ -63,7 +66,12 @@ class Ball:
 class Brick(pygame.sprite.Sprite):
     def __init__(self, x, y, health):
         pygame.sprite.Sprite.__init__(self)
-        self.image = player_img
+        # self.image = player_img
+        self.images = []
+        self.images.append(pygame.image.load('img/bricks/brick1.png'))
+        self.images.append(pygame.image.load('img/bricks/brick2.png'))
+        self.index = 0
+        self.image = self.images[self.index]
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -112,10 +120,15 @@ class Brick(pygame.sprite.Sprite):
 
     def hit(self):
         self.health -= 1
+        if self.index < len(self.images) - 1:
+            self.index += 1
+
+        self.image = self.images[self.index]
 
 
-def draw(win, paddle, ball, bricks, lives):
+def draw(win, paddle, ball, bricks, lives, background):
     win.fill("white")
+    win.blit(background, background.get_rect())
     paddle.draw(win)
     ball.draw(win)
 
@@ -155,6 +168,8 @@ def ball_paddle_collision(ball, paddle):
     angle_radians = math.radians(angle)
     x_vel = math.sin(angle_radians) * ball.VEL
     y_vel = math.cos(angle_radians) * ball.VEL * -1
+    # когда шарик касается площадки или появляется на ней, направление становится вертикальным
+    # можно разбить на 2 функции(коллизия с площадкой и просчет направления)
     ball.set_vel(x_vel, y_vel)
 
 
@@ -162,8 +177,10 @@ def generate_bricks():
     x = 0
     y = 0
     H = 0
-    width = player_img.get_width()
-    height = player_img.get_height()
+    # width = player_img.get_width()
+    width = 91
+    # height = player_img.get_height()
+    height = 26
     windowSize = pygame.display.get_window_size()
     cols = windowSize[0] // width
     gap = (windowSize[0] % width) // cols
@@ -191,8 +208,10 @@ game_folder = os.path.dirname(__file__)
 
 img_folder = os.path.join(game_folder, 'img')
 
-player_img = pygame.image.load(os.path.join(img_folder, 'p1_jump.png'))
+# player_img = pygame.image.load(os.path.join(img_folder, 'p1_jump.png'))
 paddle_img = pygame.image.load(os.path.join(img_folder, 'paddle.png'))
+background_img = pygame.image.load(os.path.join(img_folder, 'background.png'))
+# background_rect = background_img.get_rect()
 pygame.init()
 
 WIDTH, HEIGHT = 800, 600
@@ -222,7 +241,7 @@ def main():
     ball = Ball(WIDTH / 2, paddle_y - BALL_RADIUS, BALL_RADIUS, "black")
     generate_bricks()
     paddle_sprite.add(paddle)
-    lives = 1
+    lives = 3
 
     def reset():
         paddle.x = paddle_x
@@ -248,10 +267,18 @@ def main():
 
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_LEFT] and paddle.rect.x - paddle.VEL >= 0:
-            paddle.move(-1)
-        if keys[pygame.K_RIGHT] and paddle.rect.x + paddle.VEL + paddle.width <= WIDTH:
-            paddle.move(1)
+        if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_UP]:
+
+            if keys[pygame.K_LEFT] and paddle.rect.x - paddle.VEL >= 0:
+                paddle.move(-1)
+            if keys[pygame.K_RIGHT] and paddle.rect.x + paddle.VEL + paddle.width <= WIDTH:
+                paddle.move(1)
+            # если скорость = 0 -> следуем за paddle
+            if ball.VEL == 0:
+                print("sdfsdfsdfsdfsdfsdfsdfdfsdf")
+                ball.set_positions(paddle.rect.center[0], paddle_y - ball.radius)
+            if keys[pygame.K_UP]:
+                ball.VEL = 5
 
         ball.move()
         ball_collision(ball)
@@ -267,10 +294,13 @@ def main():
 
         if ball.y + ball.radius >= HEIGHT:
             lives -= 1
-            ball.x = paddle_x + paddle.width / 2
-            ball.y = paddle_y
+            ball.set_positions(paddle_x + paddle.width / 2, paddle_y - ball.radius)
+            ball.VEL = 0
             ball.set_vel(0, ball.VEL * -1)
             paddle.rect.x = WIDTH / 2 - paddle.width / 2
+
+
+
 
         if lives <= 0:
             generate_bricks()
@@ -284,7 +314,9 @@ def main():
             reset()
             display_text("You Won!")
 
-        draw(win, paddle_sprite, ball, all_sprites, lives)
+
+
+        draw(win, paddle_sprite, ball, all_sprites, lives, background_img)
 
     pygame.quit()
     quit()
