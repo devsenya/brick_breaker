@@ -3,30 +3,17 @@ import math
 import pygame
 
 import os
-pygame.init()
-print()
-all_sprites = pygame.sprite.Group()
-WIDTH, HEIGHT = 800, 600
-win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("brick breaker")
-FPS = 60
-PADDLE_WIDTH = 100
-PADDLE_HEIGHT = 15
-BALL_RADIUS = 10
-LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 
 class Paddle(pygame.sprite.Sprite):
-    VEL = 5
+    VEL = 10
 
-    def __init__(self, x, y):
+    def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = paddle_img
+        self.image = pygame.image.load('img/paddle.png')
         self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
         self.width = self.rect[2]
         self.height = self.rect[3]
-        self.rect.center = (self.x + self.width // 2, self.y + self.height // 2)
+        self.rect.center = (WIDTH // 2, HEIGHT - self.height)
 
     def draw(self, win):
         paddle_sprite.update()
@@ -66,22 +53,27 @@ class Ball:
 class Brick(pygame.sprite.Sprite):
     def __init__(self, x, y, health):
         pygame.sprite.Sprite.__init__(self)
-        # self.image = player_img
+        self.image = pygame.image.load('img/bricks/brick1.png')
         self.images = []
         self.images.append(pygame.image.load('img/bricks/brick1.png'))
         self.images.append(pygame.image.load('img/bricks/brick2.png'))
         self.index = 0
         self.image = self.images[self.index]
         self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
+
+
+        # # уменьшим размер кирпичика
+        # self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2, self.image.get_height() // 2))
 
         self.width = self.rect[2]
         self.height = self.rect[3]
         self.health = health
         self.max_health = health
 
-        self.rect.center = (self.x + self.width//2, self.y + self.height//2)
+        self.rect.center = (x + self.width//2, y + self.height//2)
+
+
+
 
     def draw(self, win):
         # pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
@@ -160,8 +152,7 @@ def ball_paddle_collision(ball, paddle):
     if not (ball.y + ball.radius >= paddle.rect.y):
         return
 
-    paddle_center = paddle.rect.x + paddle.width / 2
-    distance_to_center = ball.x - paddle_center
+    distance_to_center = ball.x - paddle.rect.x
 
     percent_width = distance_to_center / paddle.width
     angle = percent_width * 90
@@ -177,10 +168,9 @@ def generate_bricks():
     x = 0
     y = 0
     H = 0
-    # width = player_img.get_width()
-    width = 91
-    # height = player_img.get_height()
-    height = 26
+    brick = Brick(0, 0, 0)
+    width = brick.width
+    height = brick.height
     windowSize = pygame.display.get_window_size()
     cols = windowSize[0] // width
     gap = (windowSize[0] % width) // cols
@@ -208,19 +198,19 @@ game_folder = os.path.dirname(__file__)
 
 img_folder = os.path.join(game_folder, 'img')
 
-# player_img = pygame.image.load(os.path.join(img_folder, 'p1_jump.png'))
-paddle_img = pygame.image.load(os.path.join(img_folder, 'paddle.png'))
+# paddle_img = pygame.image.load(os.path.join(img_folder, 'paddle.png'))
 background_img = pygame.image.load(os.path.join(img_folder, 'background.png'))
 # background_rect = background_img.get_rect()
+
 pygame.init()
 
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1200, 600
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("brick breaker")
 
 FPS = 60
-PADDLE_WIDTH = paddle_img.get_width()
-PADDLE_HEIGHT = paddle_img.get_height()
+# PADDLE_WIDTH = paddle_img.get_width()
+# PADDLE_HEIGHT = paddle_img.get_height()
 BALL_RADIUS = 10
 
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
@@ -234,20 +224,16 @@ paddle_sprite = pygame.sprite.Group()
 def main():
     clock = pygame.time.Clock()
 
-    paddle_x = WIDTH / 2 - PADDLE_WIDTH / 2
-    paddle_y = HEIGHT - PADDLE_HEIGHT - 5
+    paddle = Paddle()
 
-    paddle = Paddle(paddle_x, paddle_y)
-    ball = Ball(WIDTH / 2, paddle_y - BALL_RADIUS, BALL_RADIUS, "black")
+    ball = Ball(WIDTH / 2, paddle.rect.y - BALL_RADIUS, BALL_RADIUS, "black")
     generate_bricks()
     paddle_sprite.add(paddle)
     lives = 3
 
     def reset():
-        paddle.x = paddle_x
-        paddle.y = paddle_y
         ball.x = WIDTH / 2
-        ball.y = paddle_y - BALL_RADIUS
+        ball.y = paddle.rect.y - BALL_RADIUS
 
     def display_text(text):
         text_render = LIVES_FONT.render(text, 1, "red")
@@ -276,7 +262,7 @@ def main():
             # если скорость = 0 -> следуем за paddle
             if ball.VEL == 0:
                 print("sdfsdfsdfsdfsdfsdfsdfdfsdf")
-                ball.set_positions(paddle.rect.center[0], paddle_y - ball.radius)
+                ball.set_positions(paddle.rect.center[0], paddle.rect.y - ball.radius)
             if keys[pygame.K_UP]:
                 ball.VEL = 5
 
@@ -294,7 +280,7 @@ def main():
 
         if ball.y + ball.radius >= HEIGHT:
             lives -= 1
-            ball.set_positions(paddle_x + paddle.width / 2, paddle_y - ball.radius)
+            ball.set_positions(paddle.rect.x + paddle.width / 2, paddle.rect.y - ball.radius)
             ball.VEL = 0
             ball.set_vel(0, ball.VEL * -1)
             paddle.rect.x = WIDTH / 2 - paddle.width / 2
