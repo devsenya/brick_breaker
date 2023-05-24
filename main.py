@@ -152,7 +152,7 @@ def ball_paddle_collision(ball, paddle):
     if not (ball.y + ball.radius >= paddle.rect.y):
         return
 
-    distance_to_center = ball.x - paddle.rect.x
+    distance_to_center = ball.x - paddle.rect.centerx
 
     percent_width = distance_to_center / paddle.width
     angle = percent_width * 90
