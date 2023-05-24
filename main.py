@@ -82,6 +82,12 @@ class Brick(pygame.sprite.Sprite):
         all_sprites.draw(win)
 
     def collide(self, ball):
+        if (ball.y - ball.radius <= self.rect.y + self.height) and (ball.y - ball.radius > self.rect.y) and (
+                self.rect.x < ball.x < self.rect.x + self.width):
+            print(" удар снизу")
+            self.hit()
+            ball.set_vel(ball.x_vel, ball.y_vel * -1)
+            return True
         # удар справа
         if (ball.x + ball.radius >= self.rect.x) and (ball.x + ball.radius < self.rect.x + self.width) and (
                 self.rect.y < ball.y < self.rect.y + self.height):
@@ -101,12 +107,6 @@ class Brick(pygame.sprite.Sprite):
             self.hit()
             ball.set_vel(ball.x_vel, ball.y_vel * -1)
             return True
-        if (ball.y - ball.radius <= self.rect.y + self.height) and (ball.y - ball.radius > self.rect.y) and (
-                self.rect.x < ball.x < self.rect.x + self.width):
-            print(" удар снизу")
-            self.hit()
-            ball.set_vel(ball.x_vel, ball.y_vel * -1)
-            return True
 
         return False
 
@@ -123,27 +123,23 @@ def draw(win, paddle, ball, bricks, lives, background):
     win.blit(background, background.get_rect())
     paddle.draw(win)
     ball.draw(win)
-
-    # bricks.update()
     bricks.draw(win)
 
-    lives_text = LIVES_FONT.render(f"Lives: {lives}", 1, "black")
+    lives_text = LIVES_FONT.render(f"Lives: {lives}", 1, "white")
     win.blit(lives_text, (10, HEIGHT - lives_text.get_height() - 10))
     pygame.display.update()
 
 
 def ball_collision(ball):
-    # print("Сработал")
+    # удар о левую стенку
     if ball.x - BALL_RADIUS <= 0 or ball.x + BALL_RADIUS >= WIDTH:
         ball.set_vel(ball.x_vel * -1, ball.y_vel)
-
-
+    # удар о правую стенку
     if ball.y + BALL_RADIUS >= HEIGHT or ball.y - BALL_RADIUS <= 0:
         ball.set_vel(ball.x_vel, ball.y_vel * -1)
 
 
 def ball_paddle_collision(ball, paddle):
-
     # если шарик вне положения площадки по X, то нечего не делай
     if not (ball.x <= paddle.rect.x + paddle.width and ball.x >= paddle.rect.x):
         return
@@ -165,9 +161,6 @@ def ball_paddle_collision(ball, paddle):
 
 
 def generate_bricks():
-    x = 0
-    y = 0
-    H = 0
     brick = Brick(0, 0, 0)
     width = brick.width
     height = brick.height
@@ -181,14 +174,12 @@ def generate_bricks():
     for row in range(rows):
         for col in range(cols):
             x = col * (width + gap)
-            y = H + row * (height + gap)
+            y = row * (height + gap) + 150
             brick = Brick(x, y, 2)
             all_sprites.add(brick)
 
             print(x, y)
     print(all_sprites)
-
-
     # return all_sprites
 
 
@@ -198,19 +189,15 @@ game_folder = os.path.dirname(__file__)
 
 img_folder = os.path.join(game_folder, 'img')
 
-# paddle_img = pygame.image.load(os.path.join(img_folder, 'paddle.png'))
 background_img = pygame.image.load(os.path.join(img_folder, 'background.png'))
-# background_rect = background_img.get_rect()
 
 pygame.init()
 
-WIDTH, HEIGHT = 1200, 600
+WIDTH, HEIGHT = 800, 600
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("brick breaker")
 
 FPS = 60
-# PADDLE_WIDTH = paddle_img.get_width()
-# PADDLE_HEIGHT = paddle_img.get_height()
 BALL_RADIUS = 10
 
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
@@ -226,7 +213,7 @@ def main():
 
     paddle = Paddle()
 
-    ball = Ball(WIDTH / 2, paddle.rect.y - BALL_RADIUS, BALL_RADIUS, "black")
+    ball = Ball(WIDTH / 2, paddle.rect.y - BALL_RADIUS, BALL_RADIUS, "white")
     generate_bricks()
     paddle_sprite.add(paddle)
     lives = 3
@@ -262,7 +249,7 @@ def main():
             # если скорость = 0 -> следуем за paddle
             if ball.VEL == 0:
                 print("sdfsdfsdfsdfsdfsdfsdfdfsdf")
-                ball.set_positions(paddle.rect.center[0], paddle.rect.y - ball.radius)
+                ball.set_positions(paddle.rect.centerx, paddle.rect.y - ball.radius)
             if keys[pygame.K_UP]:
                 ball.VEL = 5
 
@@ -280,10 +267,12 @@ def main():
 
         if ball.y + ball.radius >= HEIGHT:
             lives -= 1
-            ball.set_positions(paddle.rect.x + paddle.width / 2, paddle.rect.y - ball.radius)
+            # центровка площади после потери жизни
+            # paddle.rect.centerx = WIDTH // 2
+            ball.set_positions(paddle.rect.centerx, paddle.rect.y - ball.radius)
             ball.VEL = 0
             ball.set_vel(0, ball.VEL * -1)
-            paddle.rect.x = WIDTH / 2 - paddle.width / 2
+
 
 
 
