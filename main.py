@@ -82,10 +82,11 @@ class Brick(pygame.sprite.Sprite):
         all_sprites.draw(win)
 
     def collide(self, ball):
-        if (ball.y - ball.radius <= self.rect.y + self.height) and (ball.y - ball.radius > self.rect.y) and (
-                self.rect.x < ball.x < self.rect.x + self.width):
+        if (self.rect.y < ball.y - ball.radius <= self.rect.y + self.height) and (
+                self.rect.x - ball.radius < ball.x < self.rect.x + self.width + ball.radius):
             print(" удар снизу")
             self.hit()
+            ball.set_positions(ball.x, ball.y + ball.VEL)
             ball.set_vel(ball.x_vel, ball.y_vel * -1)
             return True
         # удар справа
@@ -101,10 +102,17 @@ class Brick(pygame.sprite.Sprite):
             self.hit()
             ball.set_vel(ball.x_vel * -1, ball.y_vel)
             return True
-        if (ball.y + ball.radius >= self.rect.y) and (ball.y + ball.radius < self.rect.y + self.height) and (
-                self.rect.x < ball.x < self.rect.x + self.width):
+        # if (ball.y + ball.radius >= self.rect.y) and (ball.y + ball.radius < self.rect.y + self.height) and (
+        #         self.rect.x < ball.x < self.rect.x + self.width):
+        #     print(" удар сверху")
+        #     self.hit()
+        #     ball.set_vel(ball.x_vel, ball.y_vel * -1)
+        #     return True
+        if (self.rect.y <= ball.y + ball.radius < self.rect.y + self.height) and (
+                self.rect.x - ball.radius < ball.x < self.rect.x + self.width + ball.radius):
             print(" удар сверху")
             self.hit()
+            ball.set_positions(ball.x, ball.y - ball.VEL)
             ball.set_vel(ball.x_vel, ball.y_vel * -1)
             return True
 
